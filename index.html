@@ -63,19 +63,28 @@
   .day.today{border-color:#fff;box-shadow:0 0 0 2px var(--primary-light) inset;}
   .day-num{font-size:12px;font-weight:700;color:var(--text-soft);flex:0 0 auto;margin-bottom:3px;}
   .day.today .day-num{color:var(--primary);}
-  .entries{flex:1 1 auto;overflow:hidden;display:flex;flex-direction:column;gap:2px;}
+  .entries{flex:1 1 auto;overflow:hidden;display:flex;flex-direction:column;gap:3px;}
   .entry-chip{
-    font-size:10.5px;line-height:1.25;background:var(--ok);color:var(--text);
-    border-radius:5px;padding:2px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-    display:flex;align-items:center;gap:3px;font-weight:600;
+    font-size:11px;line-height:1.28;background:var(--ok);color:var(--text);
+    border-radius:6px;padding:3px 6px;font-weight:600;
+    border:1.5px dashed rgba(0,0,0,.32);
   }
+  .entry-chip.is-confirmado{border-style:solid;}
   .entry-chip.st-verde{background:var(--verde);color:#fff;}
   .entry-chip.st-amarillo{background:var(--amarillo);color:#5A4300;}
   .entry-chip.st-rojo{background:var(--rojo);color:#fff;}
+  .chip-top{display:flex;align-items:flex-start;gap:3px;}
+  .chip-badges{display:flex;gap:2px;flex:0 0 auto;margin-top:1px;}
+  .chip-text{flex:1;min-width:0;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
   .entry-chip .c-badge{
-    flex:0 0 auto;background:rgba(0,0,0,.3);color:#fff;font-size:8.5px;font-weight:700;
+    flex:0 0 auto;background:rgba(0,0,0,.3);color:#fff;font-size:8px;font-weight:700;
     border-radius:3px;padding:0 3px;line-height:1.3;
   }
+  .entry-chip .doc-badge{
+    flex:0 0 auto;background:var(--primary-light);color:#fff;font-size:8px;font-weight:700;
+    border-radius:3px;padding:0 3px;line-height:1.3;
+  }
+  .chip-tecs{font-size:8.5px;opacity:.85;margin-top:1px;letter-spacing:.2px;font-weight:700;}
   .more-hint{font-size:9.5px;color:var(--text-soft);}
 
   /* ---------- EQUIPOS BOARD ---------- */
@@ -155,15 +164,28 @@
   .modal-head h3{margin:0;font-family:'DM Serif Display',serif;font-weight:400;color:var(--text);font-size:18px;}
   .modal-close{background:none;border:none;font-size:18px;cursor:pointer;color:var(--text-soft);}
   .modal-body{padding:14px 18px;overflow-y:auto;flex:1 1 auto;}
-  .m-entry{display:flex;gap:5px;align-items:center;margin-bottom:9px;flex-wrap:nowrap;}
-  .m-entry input[type=text]{flex:1;min-width:0;border:1px solid var(--border);border-radius:7px;padding:7px 9px;font-size:13px;font-family:inherit;}
-  .m-entry label{display:flex;align-items:center;gap:3px;font-size:11px;color:var(--text-soft);white-space:nowrap;}
+  .m-entry{border:1px solid var(--border);border-radius:12px;padding:10px 10px 9px;margin-bottom:10px;}
+  .m-row1{display:flex;gap:5px;align-items:center;}
+  .m-row1 input[type=text]{flex:1;min-width:0;border:1px solid var(--border);border-radius:7px;padding:7px 9px;font-size:13px;font-family:inherit;}
+  .m-row2{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap;}
+  .m-row2 label{display:flex;align-items:center;gap:3px;font-size:11px;color:var(--text-soft);white-space:nowrap;}
   .status-dots{display:flex;gap:3px;flex:0 0 auto;}
   .status-dot-btn{width:16px;height:16px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0;}
   .status-dot-btn.sel{border-color:var(--text);}
   .status-dot-btn.none{background:#fff;border:2px dashed var(--border);}
   .m-entry .m-del{background:none;border:none;color:#c7c7c7;cursor:pointer;font-size:15px;flex:0 0 auto;}
   .m-entry .m-del:hover{color:#e33;}
+  .m-row3{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
+  .flag-toggle{font-size:10.5px;font-weight:700;padding:4px 9px;border-radius:20px;border:1.5px dashed var(--border);
+    background:#fff;color:var(--text-soft);cursor:pointer;}
+  .flag-toggle.on-confirm{background:var(--verde);color:#fff;border-style:solid;border-color:var(--verde);}
+  .flag-toggle.on-doc{background:var(--primary-light);color:#fff;border-style:solid;border-color:var(--primary-light);}
+  .m-row4{margin-top:9px;}
+  .m-row4-lbl{font-size:10px;color:var(--text-soft);margin-bottom:4px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;}
+  .tec-pills{display:flex;flex-wrap:wrap;gap:4px;}
+  .tec-pill{font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:14px;border:1.5px solid var(--border);
+    background:#fff;color:var(--text-soft);cursor:pointer;}
+  .tec-pill.sel{background:var(--primary);color:#fff;border-color:var(--primary);}
   .modal-foot{padding:12px 18px;border-top:1px solid var(--border);}
   .add-entry{width:100%;background:var(--ok);border:1px dashed var(--primary-light);color:var(--primary);border-radius:8px;padding:8px;font-size:13px;font-weight:600;cursor:pointer;}
   .add-entry:hover{background:#dfeaff;}
@@ -339,6 +361,7 @@ async function persistSet(key, value){
 
 const MONTH_NAMES=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
 const ENTRY_STATUS_COLORS={verde:'#22C55E',amarillo:'#FFD666',rojo:'#EF4444'};
+const TECNICOS=['RL','FG','AT','MQ','MB','MLB','LS','GM','DV','PB','SF','CM','JU'];
 const SWATCHES=['#2250C2','#22C55E','#FFD666','#FF9F43','#A855F7','#EC4899','#14B8A6','#64748B'];
 let calendarData={};
 let equiposData={pendientes:[],ingresos:[],egresos:[]};
@@ -361,7 +384,12 @@ function ensureDay(key){
   if(!d){ d={status:null,entries:[]}; calendarData[key]=d; }
   else if(Array.isArray(d)){ d={status:null,entries:d}; calendarData[key]=d; }
   else { if(!d.entries) d.entries=[]; if(d.status===undefined) d.status=null; }
-  d.entries.forEach(en=>{ if(en.status===undefined) en.status=null; });
+  d.entries.forEach(en=>{
+    if(en.status===undefined) en.status=null;
+    if(en.confirmado===undefined) en.confirmado=false;
+    if(en.docOk===undefined) en.docOk=false;
+    if(!en.tecnicos) en.tecnicos=[];
+  });
   return d;
 }
 
@@ -415,11 +443,23 @@ function buildCalendar(gridEl,titleEl,y,m){
     const dayData=calendarData[key];
     const entriesWrap=document.createElement('div'); entriesWrap.className='entries';
     const entries=(dayData && dayData.entries)||[];
-    const maxShow=4;
+    const maxShow=3;
     entries.slice(0,maxShow).forEach(en=>{
-      const chip=document.createElement('div'); chip.className='entry-chip'+(en.status?(' st-'+en.status):'');
-      if(en.cargado){ const b=document.createElement('span'); b.className='c-badge'; b.textContent='C'; chip.appendChild(b); }
-      const txt=document.createElement('span'); txt.textContent=en.text; chip.appendChild(txt);
+      const chip=document.createElement('div');
+      chip.className='entry-chip'+(en.status?(' st-'+en.status):'')+(en.confirmado?' is-confirmado':'');
+      const top=document.createElement('div'); top.className='chip-top';
+      if(en.cargado || en.docOk){
+        const badges=document.createElement('span'); badges.className='chip-badges';
+        if(en.cargado){ const b=document.createElement('span'); b.className='c-badge'; b.textContent='C'; badges.appendChild(b); }
+        if(en.docOk){ const b=document.createElement('span'); b.className='doc-badge'; b.textContent='D'; badges.appendChild(b); }
+        top.appendChild(badges);
+      }
+      const txt=document.createElement('span'); txt.className='chip-text'; txt.textContent=en.text; top.appendChild(txt);
+      chip.appendChild(top);
+      if(en.tecnicos && en.tecnicos.length){
+        const tecs=document.createElement('div'); tecs.className='chip-tecs'; tecs.textContent=en.tecnicos.join(' · ');
+        chip.appendChild(tecs);
+      }
       entriesWrap.appendChild(chip);
     });
     if(entries.length>maxShow){
@@ -476,15 +516,23 @@ function renderModalBody(){
   }
   entries.forEach((en,idx)=>{
     const row=document.createElement('div'); row.className='m-entry';
+
+    // Row 1: text + delete
+    const row1=document.createElement('div'); row1.className='m-row1';
     const input=document.createElement('input'); input.type='text'; input.value=en.text;
-    input.placeholder='Destino, técnicos, presupuesto...';
+    input.placeholder='Cliente / viaje...';
     input.oninput=()=>{ en.text=input.value; saveCalendar(); renderCalendars(); };
     input.onchange=()=>{ flashSaved(); };
+    const del=document.createElement('button'); del.className='m-del'; del.textContent='✕';
+    del.onclick=()=>{ entries.splice(idx,1); saveCalendar(); renderCalendars(); renderModalBody(); flashSaved(); };
+    row1.appendChild(input); row1.appendChild(del);
+
+    // Row 2: cargado + semáforo
+    const row2=document.createElement('div'); row2.className='m-row2';
     const label=document.createElement('label');
     const chk=document.createElement('input'); chk.type='checkbox'; chk.checked=!!en.cargado;
     chk.onchange=()=>{ en.cargado=chk.checked; saveCalendar(); renderCalendars(); flashSaved(); };
     label.appendChild(chk); label.appendChild(document.createTextNode('Carg.'));
-
     const dots=document.createElement('div'); dots.className='status-dots';
     [['none',null,'Sin estado'],['verde','verde','Realizado total'],['amarillo','amarillo','Parcial'],['rojo','rojo','No se hizo']].forEach(([cls,val,title])=>{
       const b=document.createElement('button'); b.type='button';
@@ -494,17 +542,46 @@ function renderModalBody(){
       b.onclick=()=>{ en.status = val; saveCalendar(); renderCalendars(); renderModalBody(); flashSaved(); };
       dots.appendChild(b);
     });
+    row2.appendChild(label); row2.appendChild(dots);
 
-    const del=document.createElement('button'); del.className='m-del'; del.textContent='✕';
-    del.onclick=()=>{ entries.splice(idx,1); saveCalendar(); renderCalendars(); renderModalBody(); flashSaved(); };
-    row.appendChild(input); row.appendChild(label); row.appendChild(dots); row.appendChild(del);
+    // Row 3: confirmado + documentación
+    const row3=document.createElement('div'); row3.className='m-row3';
+    const confirmBtn=document.createElement('button'); confirmBtn.type='button';
+    confirmBtn.className='flag-toggle'+(en.confirmado?' on-confirm':'');
+    confirmBtn.textContent = en.confirmado ? '✓ Confirmado' : 'Tentativo';
+    confirmBtn.onclick=()=>{ en.confirmado=!en.confirmado; saveCalendar(); renderCalendars(); renderModalBody(); flashSaved(); };
+    const docBtn=document.createElement('button'); docBtn.type='button';
+    docBtn.className='flag-toggle'+(en.docOk?' on-doc':'');
+    docBtn.textContent = en.docOk ? '✓ Documentación OK' : 'Documentación pendiente';
+    docBtn.onclick=()=>{ en.docOk=!en.docOk; saveCalendar(); renderCalendars(); renderModalBody(); flashSaved(); };
+    row3.appendChild(confirmBtn); row3.appendChild(docBtn);
+
+    // Row 4: técnicos
+    const row4=document.createElement('div'); row4.className='m-row4';
+    const r4lbl=document.createElement('div'); r4lbl.className='m-row4-lbl'; r4lbl.textContent='Técnicos';
+    const pills=document.createElement('div'); pills.className='tec-pills';
+    TECNICOS.forEach(t=>{
+      const p=document.createElement('button'); p.type='button';
+      const sel=(en.tecnicos||[]).includes(t);
+      p.className='tec-pill'+(sel?' sel':''); p.textContent=t;
+      p.onclick=()=>{
+        if(!en.tecnicos) en.tecnicos=[];
+        if(en.tecnicos.includes(t)) en.tecnicos=en.tecnicos.filter(x=>x!==t);
+        else en.tecnicos.push(t);
+        saveCalendar(); renderCalendars(); renderModalBody(); flashSaved();
+      };
+      pills.appendChild(p);
+    });
+    row4.appendChild(r4lbl); row4.appendChild(pills);
+
+    row.appendChild(row1); row.appendChild(row2); row.appendChild(row3); row.appendChild(row4);
     body.appendChild(row);
   });
 }
 function addEntryRow(){
   if(!currentDayKey) return;
   const day=ensureDay(currentDayKey);
-  day.entries.push({id:Date.now(),text:'',cargado:false,status:null});
+  day.entries.push({id:Date.now(),text:'',cargado:false,status:null,confirmado:false,docOk:false,tecnicos:[]});
   saveCalendar();
   renderCalendars();
   renderModalBody();
