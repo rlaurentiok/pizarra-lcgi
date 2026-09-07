@@ -231,18 +231,32 @@
   /* ---------- TASKS BOARD ---------- */
   .tasks-day-nav{display:flex;align-items:center;gap:8px;justify-content:center;}
   .tasks-day-title{font-family:'DM Serif Display',serif;font-size:22px;color:#fff;text-transform:capitalize;min-width:220px;text-align:center;}
-  .tasks-list{flex:1 1 auto;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding-right:4px;}
-  .task-card{background:#fff;border-radius:14px;padding:12px 14px;}
+  .task-add-bar{flex:0 0 auto;display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;align-items:center;}
+  .task-add-bar select, .task-add-bar input[type=text], .task-add-bar input[type=time]{
+    border:none;border-radius:8px;padding:7px 10px;font-size:12.5px;font-family:inherit;color:var(--text);
+  }
+  .task-add-bar input[type=text]{flex:1;min-width:140px;}
+  .task-add-bar button{background:#fff;color:var(--primary);border:none;border-radius:8px;padding:7px 14px;font-size:12.5px;font-weight:700;cursor:pointer;}
+  .task-add-bar button:hover{background:var(--ok);}
+  .tasks-list{flex:1 1 auto;overflow-y:auto;display:flex;flex-direction:column;gap:14px;padding-right:4px;}
+  .tasks-empty-hint{color:rgba(255,255,255,.7);font-size:13px;text-align:center;margin-top:20px;}
+  .task-tec-group{display:flex;flex-direction:column;gap:6px;}
+  .task-tec-name{color:#fff;font-family:'DM Serif Display',serif;font-size:15px;padding-bottom:3px;border-bottom:1px solid rgba(255,255,255,.25);}
+  .task-card{background:#fff;border-radius:12px;padding:9px 12px;}
   .task-card.overdue{box-shadow:0 0 0 3px var(--alert);}
   .task-card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
-  .task-name{font-weight:700;font-size:14px;color:var(--text);}
-  .task-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .task-name-wrap{display:flex;align-items:center;gap:8px;min-width:0;}
+  .task-badge{flex:0 0 auto;background:var(--ok);color:var(--primary);font-size:9.5px;font-weight:700;
+    padding:2px 8px;border-radius:12px;text-transform:uppercase;letter-spacing:.3px;}
+  .task-name{font-weight:700;font-size:13.5px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .task-del{background:none;border:none;color:#c7c7c7;cursor:pointer;font-size:14px;flex:0 0 auto;}
+  .task-del:hover{color:#e33;}
+  .task-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:7px;}
   .task-hora{border:1px solid var(--border);border-radius:7px;padding:4px 6px;font-size:11.5px;font-family:inherit;color:var(--text-soft);}
   .task-estado{font-size:11px;font-weight:700;padding:5px 11px;border-radius:16px;border:none;cursor:pointer;color:#fff;}
   .task-estado.est-pendiente{background:var(--text-soft);}
   .task-estado.est-en_curso{background:var(--amarillo);color:#5A4300;}
   .task-estado.est-hecho{background:var(--verde);}
-  .task-tecs{display:flex;flex-wrap:wrap;gap:4px;margin-top:9px;}
 
   ::-webkit-scrollbar{width:6px;}
   ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.3);border-radius:3px;}
@@ -358,6 +372,13 @@
         </div>
       </div>
       <div class="clock" id="clock4"></div>
+    </div>
+    <div class="task-add-bar">
+      <select id="taskAddTec"></select>
+      <select id="taskAddTarea"></select>
+      <input type="text" id="taskAddDetalle" placeholder="Cliente / equipo">
+      <input type="time" id="taskAddHora" title="Hora estimada (opcional)">
+      <button onclick="addTaskItem()">+ Agregar</button>
     </div>
     <div class="tasks-list" id="tasksList"></div>
   </div>
@@ -497,14 +518,10 @@ function ensureDay(key){
 }
 function ensureTaskDay(key){
   let d=tasksData[key];
-  if(!d) { d={}; tasksData[key]=d; }
-  TASK_LIST.forEach(t=>{
-    if(!d[t.id]) d[t.id]={tecnicos:[],estado:'pendiente',hora:''};
-    else{
-      if(!d[t.id].tecnicos) d[t.id].tecnicos=[];
-      if(!d[t.id].estado) d[t.id].estado='pendiente';
-      if(d[t.id].hora===undefined) d[t.id].hora='';
-    }
+  if(!Array.isArray(d)){ d=[]; tasksData[key]=d; }
+  d.forEach(it=>{
+    if(it.estado===undefined) it.estado='pendiente';
+    if(it.hora===undefined) it.hora='';
   });
   return d;
 }
@@ -1064,10 +1081,34 @@ function taskDateForOffset(){
 }
 function shiftTaskDay(delta){ taskDayOffset+=delta; renderTasksBoard(); }
 function resetTaskDay(){ taskDayOffset=0; renderTasksBoard(); }
+function fillTaskAddSelects(){
+  const tecSel=document.getElementById('taskAddTec');
+  const tareaSel=document.getElementById('taskAddTarea');
+  if(!tecSel || !tareaSel) return;
+  tecSel.innerHTML = '<option value="">Técnico</option>' + TASK_TECNICOS.map(t=>`<option value="${t}">${t}</option>`).join('');
+  tareaSel.innerHTML = '<option value="">Tarea</option>' + TASK_LIST.map(t=>`<option value="${t.id}">${t.label}</option>`).join('');
+}
+function addTaskItem(){
+  const dt=taskDateForOffset();
+  const key=fullDateKey(dt);
+  const items=ensureTaskDay(key);
+  const tec=document.getElementById('taskAddTec').value;
+  const tarea=document.getElementById('taskAddTarea').value;
+  const detalleInp=document.getElementById('taskAddDetalle');
+  const horaInp=document.getElementById('taskAddHora');
+  const detalle=detalleInp.value.trim();
+  const hora=horaInp.value;
+  if(!tec || !tarea || !detalle) return;
+  items.push({id:Date.now(), tecnico:tec, tarea, detalle, estado:'pendiente', hora});
+  saveTasksData();
+  detalleInp.value=''; horaInp.value='';
+  renderTasksBoard();
+}
+function taskLabel(id){ const t=TASK_LIST.find(x=>x.id===id); return t?t.label:id; }
 function renderTasksBoard(){
   const dt=taskDateForOffset();
   const key=fullDateKey(dt);
-  const day=ensureTaskDay(key);
+  const items=ensureTaskDay(key);
   const titleEl=document.getElementById('tasksDayTitle');
   if(titleEl){
     const label=dt.toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'});
@@ -1079,45 +1120,56 @@ function renderTasksBoard(){
   const list=document.getElementById('tasksList');
   if(!list) return;
   list.innerHTML='';
-  TASK_LIST.forEach(task=>{
-    const t=day[task.id];
-    const card=document.createElement('div'); card.className='task-card';
-    const isOverdue = key===nowKey && t.estado!=='hecho' && t.hora && (()=>{
-      const [hh,mm]=t.hora.split(':').map(Number);
-      return (hh*60+mm) < nowMinutes;
-    })();
-    if(isOverdue) card.classList.add('overdue');
 
-    const head=document.createElement('div'); head.className='task-card-head';
-    const name=document.createElement('div'); name.className='task-name'; name.textContent=task.label;
-    const right=document.createElement('div'); right.className='task-right';
-    const horaInp=document.createElement('input'); horaInp.type='time'; horaInp.className='task-hora'; horaInp.value=t.hora||'';
-    horaInp.title='Hora estimada';
-    horaInp.onchange=()=>{ t.hora=horaInp.value; saveTasksData(); renderTasksBoard(); };
-    const estadoBtn=document.createElement('button'); estadoBtn.className='task-estado est-'+t.estado;
-    const ESTADO_LABEL={pendiente:'Pendiente',en_curso:'En curso',hecho:'✓ Hecho'};
-    const ESTADO_NEXT={pendiente:'en_curso',en_curso:'hecho',hecho:'pendiente'};
-    estadoBtn.textContent=ESTADO_LABEL[t.estado];
-    estadoBtn.onclick=()=>{ t.estado=ESTADO_NEXT[t.estado]; saveTasksData(); renderTasksBoard(); };
-    right.appendChild(horaInp); right.appendChild(estadoBtn);
-    head.appendChild(name); head.appendChild(right);
-    card.appendChild(head);
+  const ESTADO_LABEL={pendiente:'Pendiente',en_curso:'En curso',hecho:'✓ Hecho'};
+  const ESTADO_NEXT={pendiente:'en_curso',en_curso:'hecho',hecho:'pendiente'};
 
-    const tecsWrap=document.createElement('div'); tecsWrap.className='task-tecs';
-    TASK_TECNICOS.forEach(tec=>{
-      const sel=(t.tecnicos||[]).includes(tec);
-      const p=document.createElement('button'); p.type='button';
-      p.className='tec-pill'+(sel?' sel':''); p.textContent=tec;
-      p.onclick=()=>{
-        if(!t.tecnicos) t.tecnicos=[];
-        if(t.tecnicos.includes(tec)) t.tecnicos=t.tecnicos.filter(x=>x!==tec);
-        else t.tecnicos.push(tec);
+  const present=TASK_TECNICOS.filter(tec=>items.some(it=>it.tecnico===tec));
+  if(present.length===0){
+    const hint=document.createElement('div'); hint.className='tasks-empty-hint';
+    hint.textContent='Sin tareas asignadas para este día.';
+    list.appendChild(hint);
+    return;
+  }
+  present.forEach(tec=>{
+    const group=document.createElement('div'); group.className='task-tec-group';
+    const h=document.createElement('div'); h.className='task-tec-name'; h.textContent=tec;
+    group.appendChild(h);
+    items.filter(it=>it.tecnico===tec).forEach(it=>{
+      const card=document.createElement('div'); card.className='task-card';
+      const isOverdue = key===nowKey && it.estado!=='hecho' && it.hora && (()=>{
+        const [hh,mm]=it.hora.split(':').map(Number);
+        return (hh*60+mm) < nowMinutes;
+      })();
+      if(isOverdue) card.classList.add('overdue');
+
+      const head=document.createElement('div'); head.className='task-card-head';
+      const nameWrap=document.createElement('div'); nameWrap.className='task-name-wrap';
+      const badge=document.createElement('span'); badge.className='task-badge'; badge.textContent=taskLabel(it.tarea);
+      const name=document.createElement('div'); name.className='task-name'; name.textContent=it.detalle;
+      nameWrap.appendChild(badge); nameWrap.appendChild(name);
+      const del=document.createElement('button'); del.className='task-del'; del.textContent='✕';
+      del.onclick=()=>{
+        const idx=items.indexOf(it);
+        if(idx>-1) items.splice(idx,1);
         saveTasksData(); renderTasksBoard();
       };
-      tecsWrap.appendChild(p);
+      head.appendChild(nameWrap); head.appendChild(del);
+      card.appendChild(head);
+
+      const right=document.createElement('div'); right.className='task-right';
+      const horaInp=document.createElement('input'); horaInp.type='time'; horaInp.className='task-hora'; horaInp.value=it.hora||'';
+      horaInp.title='Hora estimada';
+      horaInp.onchange=()=>{ it.hora=horaInp.value; saveTasksData(); renderTasksBoard(); };
+      const estadoBtn=document.createElement('button'); estadoBtn.className='task-estado est-'+it.estado;
+      estadoBtn.textContent=ESTADO_LABEL[it.estado];
+      estadoBtn.onclick=()=>{ it.estado=ESTADO_NEXT[it.estado]; saveTasksData(); renderTasksBoard(); };
+      right.appendChild(horaInp); right.appendChild(estadoBtn);
+      card.appendChild(right);
+
+      group.appendChild(card);
     });
-    card.appendChild(tecsWrap);
-    list.appendChild(card);
+    list.appendChild(group);
   });
 }
 
@@ -1166,6 +1218,7 @@ async function pollUpdates(){
 
 async function init(){
   await loadData();
+  fillTaskAddSelects();
   renderCalendars();
   renderEquipos();
   renderTagbar();
