@@ -473,6 +473,7 @@ const ENTRY_STATUS_COLORS={verde:'#22C55E',amarillo:'#FFD666',rojo:'#EF4444'};
 const TECNICOS=['RL','FG','AT','MQ','MB','MLB','LS','GM','DV','PB','SF','CM','JU'];
 const SWATCHES=['#2250C2','#22C55E','#FFD666','#FF9F43','#A855F7','#EC4899','#14B8A6','#64748B'];
 const TASK_LIST=[
+  {id:'calibrando',label:'Calibrando'},
   {id:'precarga',label:'Precarga'},
   {id:'carga_datos',label:'Carga de datos'},
   {id:'revision_carga',label:'Revisión de carga'},
@@ -1105,10 +1106,23 @@ function addTaskItem(){
   renderTasksBoard();
 }
 function taskLabel(id){ const t=TASK_LIST.find(x=>x.id===id); return t?t.label:id; }
+function collectPendingBefore(targetKey){
+  // returns [{item, originKey}] for every not-yet-"hecho" item filed under a day before targetKey
+  const out=[];
+  Object.keys(tasksData).sort().forEach(k=>{
+    if(k>=targetKey) return;
+    const arr=tasksData[k];
+    if(!Array.isArray(arr)) return;
+    arr.forEach(it=>{ if(it.estado!=='hecho') out.push({item:it, originKey:k}); });
+  });
+  return out;
+}
 function renderTasksBoard(){
   const dt=taskDateForOffset();
   const key=fullDateKey(dt);
-  const items=ensureTaskDay(key);
+  const nativeItems=ensureTaskDay(key).map(it=>({item:it, originKey:key}));
+  const carried=collectPendingBefore(key);
+  const allItems=[...carried, ...nativeItems];
   const titleEl=document.getElementById('tasksDayTitle');
   if(titleEl){
     const label=dt.toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'});
@@ -1124,7 +1138,7 @@ function renderTasksBoard(){
   const ESTADO_LABEL={pendiente:'Pendiente',en_curso:'En curso',hecho:'✓ Hecho'};
   const ESTADO_NEXT={pendiente:'en_curso',en_curso:'hecho',hecho:'pendiente'};
 
-  const present=TASK_TECNICOS.filter(tec=>items.some(it=>it.tecnico===tec));
+  const present=TASK_TECNICOS.filter(tec=>allItems.some(x=>x.item.tecnico===tec));
   if(present.length===0){
     const hint=document.createElement('div'); hint.className='tasks-empty-hint';
     hint.textContent='Sin tareas asignadas para este día.';
@@ -1135,23 +1149,31 @@ function renderTasksBoard(){
     const group=document.createElement('div'); group.className='task-tec-group';
     const h=document.createElement('div'); h.className='task-tec-name'; h.textContent=tec;
     group.appendChild(h);
-    items.filter(it=>it.tecnico===tec).forEach(it=>{
+    allItems.filter(x=>x.item.tecnico===tec).forEach(({item:it, originKey})=>{
       const card=document.createElement('div'); card.className='task-card';
-      const isOverdue = key===nowKey && it.estado!=='hecho' && it.hora && (()=>{
+      const isOverdue = originKey===nowKey && it.estado!=='hecho' && it.hora && (()=>{
         const [hh,mm]=it.hora.split(':').map(Number);
         return (hh*60+mm) < nowMinutes;
       })();
-      if(isOverdue) card.classList.add('overdue');
+      if(isOverdue || originKey<key) card.classList.add('overdue');
 
       const head=document.createElement('div'); head.className='task-card-head';
       const nameWrap=document.createElement('div'); nameWrap.className='task-name-wrap';
       const badge=document.createElement('span'); badge.className='task-badge'; badge.textContent=taskLabel(it.tarea);
       const name=document.createElement('div'); name.className='task-name'; name.textContent=it.detalle;
-      nameWrap.appendChild(badge); nameWrap.appendChild(name);
+      nameWrap.appendChild(badge);
+      if(originKey<key){
+        const [oy,om,od]=originKey.split('-');
+        const late=document.createElement('span'); late.className='task-badge'; late.style.background='var(--alert)'; late.style.color='#5A2600';
+        late.textContent='desde '+od+'/'+om;
+        nameWrap.appendChild(late);
+      }
+      nameWrap.appendChild(name);
       const del=document.createElement('button'); del.className='task-del'; del.textContent='✕';
       del.onclick=()=>{
-        const idx=items.indexOf(it);
-        if(idx>-1) items.splice(idx,1);
+        const arr=ensureTaskDay(originKey);
+        const idx=arr.indexOf(it);
+        if(idx>-1) arr.splice(idx,1);
         saveTasksData(); renderTasksBoard();
       };
       head.appendChild(nameWrap); head.appendChild(del);
