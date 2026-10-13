@@ -479,7 +479,8 @@ const TASK_LIST=[
   {id:'revision_carga',label:'Revisión de carga'},
   {id:'armado_certificados',label:'Armado de certificados'},
   {id:'revision_certificados',label:'Revisión de certificados'},
-  {id:'firma',label:'Firma'}
+  {id:'firma',label:'Firma'},
+  {id:'otras',label:'Otras tareas'}
 ];
 const TASK_TECNICOS=['Flo','Dani','Santi','Gonza','Colo','Cristian','Ariel','Mari','Marian','Fran'];
 let calendarData={};
@@ -1088,6 +1089,10 @@ function fillTaskAddSelects(){
   if(!tecSel || !tareaSel) return;
   tecSel.innerHTML = '<option value="">Técnico</option>' + TASK_TECNICOS.map(t=>`<option value="${t}">${t}</option>`).join('');
   tareaSel.innerHTML = '<option value="">Tarea</option>' + TASK_LIST.map(t=>`<option value="${t.id}">${t.label}</option>`).join('');
+  tareaSel.onchange=()=>{
+    const det=document.getElementById('taskAddDetalle');
+    det.placeholder = tareaSel.value==='otras' ? 'Detalle de la tarea (ej: limpieza, orden, capacitación)' : 'Cliente / equipo';
+  };
 }
 function addTaskItem(){
   const dt=taskDateForOffset();
@@ -1103,6 +1108,7 @@ function addTaskItem(){
   items.push({id:Date.now(), tecnico:tec, tarea, detalle, estado:'pendiente', hora});
   saveTasksData();
   detalleInp.value=''; horaInp.value='';
+  document.getElementById('taskAddTarea').value=''; detalleInp.placeholder='Cliente / equipo';
   renderTasksBoard();
 }
 function taskLabel(id){ const t=TASK_LIST.find(x=>x.id===id); return t?t.label:id; }
