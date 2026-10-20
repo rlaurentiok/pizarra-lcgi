@@ -58,6 +58,9 @@
     transition:border-color .15s, transform .15s;
   }
   .day:hover{border-color:var(--primary-light);}
+  .entry-chip{cursor:grab;}
+  .entry-chip.dragging{opacity:.4;}
+  .day.drop-over{border-color:#fff;background:rgba(255,255,255,.35);box-shadow:0 0 0 2px var(--primary-light) inset;}
   .day.empty{background:rgba(255,255,255,.06);cursor:default;}
   .day.empty:hover{border-color:transparent;}
   .day.today{border-color:#fff;box-shadow:0 0 0 2px var(--primary-light) inset;}
@@ -582,6 +585,7 @@ async function saveTripEquipTags(){ try{ await persistSet('trip-equip-tags', JSO
 async function saveTasksData(){ try{ await persistSet('tasks-board', JSON.stringify(tasksData)); }catch(e){} }
 
 
+let dragInfo=null;
 function buildCalendar(gridEl,titleEl,y,m){
   titleEl.textContent = `${MONTH_NAMES[m]} ${y}`;
   gridEl.innerHTML='';
@@ -600,6 +604,17 @@ function buildCalendar(gridEl,titleEl,y,m){
     cell.className='day';
     if(isCurrentMonth && today.getDate()===d) cell.classList.add('today');
     cell.onclick=()=>openModal(key,y,m,d);
+    cell.ondragover=(ev)=>{ if(dragInfo){ ev.preventDefault(); cell.classList.add('drop-over'); } };
+    cell.ondragleave=(ev)=>{ if(!cell.contains(ev.relatedTarget)) cell.classList.remove('drop-over'); };
+    cell.ondrop=(ev)=>{
+      ev.preventDefault(); cell.classList.remove('drop-over');
+      if(!dragInfo || dragInfo.key===key){ dragInfo=null; return; }
+      const src=ensureDay(dragInfo.key); const dst=ensureDay(key);
+      const moved=src.entries.splice(dragInfo.idx,1)[0];
+      dragInfo=null;
+      if(moved){ dst.entries.push(moved); saveCalendar(); }
+      renderCalendars();
+    };
     const num=document.createElement('div'); num.className='day-num'; num.textContent=d;
     cell.appendChild(num);
     const dayData=calendarData[key];
@@ -610,6 +625,9 @@ function buildCalendar(gridEl,titleEl,y,m){
       const chip=document.createElement('div');
       chip.className='entry-chip'+(en.status?(' st-'+en.status):'')+(en.confirmado?' is-confirmado':'');
       chip.onclick=(e)=>{ e.stopPropagation(); openEquipModal(key, eidx); };
+      chip.draggable=true;
+      chip.ondragstart=(ev)=>{ dragInfo={key,idx:eidx}; ev.dataTransfer.effectAllowed='move'; ev.dataTransfer.setData('text/plain','svc'); setTimeout(()=>chip.classList.add('dragging'),0); };
+      chip.ondragend=()=>{ dragInfo=null; chip.classList.remove('dragging'); document.querySelectorAll('.day.drop-over').forEach(x=>x.classList.remove('drop-over')); };
       const top=document.createElement('div'); top.className='chip-top';
       if(en.cargado || en.docOk || (en.equipos && en.equipos.length) || (en.notas && en.notas.trim())){
         const badges=document.createElement('span'); badges.className='chip-badges';
