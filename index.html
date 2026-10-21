@@ -931,6 +931,10 @@ function renderEquipos(){
         const mv=document.createElement('button'); mv.className='eq-move'; mv.textContent='Listo → Egreso';
         mv.onclick=()=>{ equiposData.ingresos.splice(idx,1); item.fecha=todayStr(); equiposData.egresos.push(item); saveEquipos(); renderEquipos(); };
         actions.appendChild(mv);
+      } else if(col==='egresos'){
+        const mv=document.createElement('button'); mv.className='eq-move'; mv.textContent='Retirado ✓';
+        mv.onclick=()=>{ equiposData.egresos.splice(idx,1); saveEquipos(); renderEquipos(); };
+        actions.appendChild(mv);
       }
       meta.appendChild(daysBadge); meta.appendChild(actions);
       card.appendChild(meta);
